@@ -1,7 +1,7 @@
 ---
 title: "Interest Rate Effects on S&P 500 Yield"
 author: "Dean Young"
-output: word_document
+output: html_document
 ---
 
 ####Note: No part of this analysis constitutes investment advice in any form or fashion. Invest at your own risk. The author of this analysis holds a total US stock market index which includes the S&P 500.
