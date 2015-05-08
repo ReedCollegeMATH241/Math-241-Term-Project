@@ -1,0 +1,92 @@
+---
+title: "README"
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r,echo=FALSE}
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(Quandl))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(tseries))
+suppressPackageStartupMessages(library(lmtest))
+Quandl.auth("uipvA4VQdjDviQ9TT3cE")
+```
+
+```{r,echo=FALSE,cache=TRUE} 
+# Data cleaning and set up
+inflation <- read.csv("inflation.csv") %>% tbl_df() %>% rename(Infl = Inflation)
+inflation$Date <- dmy(inflation$Date)
+inflation %<>% mutate(year=year(Date)) %>% select(Infl,year)
+
+Fed.Fund <- Quandl("FRED/DFF") %>% tbl_df() %>% mutate(Date = ymd(Date), year=year(Date)) %>% rename(rate=Value)
+One.Year <- Quandl("FRED/DTB1YR") %>% tbl_df() %>% mutate(Date = ymd(Date), year=year(Date)) %>% rename(rate=Value)
+Three.Year <- Quandl("FRED/DGS3") %>% tbl_df() %>% mutate(Date = ymd(Date), year=year(Date)) %>% rename(rate=Value)
+Five.Year <- Quandl("FRED/DGS5") %>% tbl_df() %>% mutate(Date = ymd(Date), year=year(Date)) %>% rename(rate=Value)
+Ten.Year <- Quandl("FRED/DGS10") %>% tbl_df() %>% mutate(Date = ymd(Date), year=year(Date)) %>% rename(rate=Value)
+Thirty.Year <- Quandl("FRED/DGS30") %>% tbl_df() %>% mutate(Date = ymd(Date), year=year(Date)) %>% rename(rate=Value)
+Stock <- read.csv("SP 500 PE Ratios.csv") %>% tbl_df()
+Stock$Date <- dmy(Stock$Date)
+
+# need a function to fix lubridates' issue with years before 1969 (assumes <69 means 2069 not 1969)
+foo <- function(x){
+  m <- year(x) %% 100
+  year(x) <- ifelse(m > 15, 1900+m, 2000+m)
+  x
+}
+
+Stock$Date <- foo(Stock$Date)
+Stock %<>% arrange(Date) %>% mutate(PE = (1/PE)*100) %>% rename(stock.rate=PE) %>% mutate(year=year(Date))
+
+Stock.Y <- Stock %>% group_by(year) %>% summarise(rate=mean(stock.rate)) %>% filter(year>1961 & year<2015) %>%
+  mutate(type="S&P 500")
+Fed.Fund.Y <- Fed.Fund %>% group_by(year = year(Date)) %>% summarise(rate=mean(rate)) %>% mutate(dur="Fed Funds")
+One.Year.Y <- One.Year %>% group_by(year = year(Date)) %>% summarise(rate=mean(rate)) %>% mutate(dur="One Year")
+Three.Year.Y <- Three.Year %>% group_by(year = year(Date)) %>% summarise(rate=mean(rate)) %>% mutate(dur="Three Year")
+Five.Year.Y <- Five.Year %>% group_by(year = year(Date)) %>% summarise(rate=mean(rate)) %>% mutate(dur="Five Year")
+Ten.Year.Y <- Ten.Year %>% group_by(year = year(Date)) %>% summarise(rate=mean(rate)) %>% mutate(dur="Ten Year")
+Thirty.Year.Y <- Thirty.Year %>% group_by(year = year(Date)) %>% summarise(rate=mean(rate)) %>% mutate(dur="Thirty Year")
+
+spread <- bind_rows(Fed.Fund.Y,One.Year.Y) %>% bind_rows(Three.Year.Y) %>% bind_rows(Five.Year.Y) %>% 
+  bind_rows(Ten.Year.Y) %>% bind_rows(Thirty.Year.Y) %>% mutate(year=as.character(year))
+
+all.years <- spread %>% group_by(dur) %>% summarise(rate=mean(rate)) %>% mutate(year="all")
+
+spread.select <- spread %>% filter(year==2015 | year==1981 | year==1984) %>% bind_rows(all.years)
+spread.select$dur2 <- factor(spread.select$dur, levels=c("Fed Funds","One Year","Three Year","Five Year","Ten Year","Thirty Year"))
+
+Reg.Data2 <- Three.Year.Y %>% select(year,bond.nom.rate = rate) %>% mutate(lag.year=year-1) %>%
+  inner_join(rename(inflation,lag.Infl=Infl),by=c("lag.year"="year")) %>% 
+  inner_join(select(Stock.Y,year,stock.nom.rate = rate),by="year")
+
+Reg.Data2 %<>% mutate(bond.exp.rate=bond.nom.rate-lag.Infl,stock.exp.rate=stock.nom.rate-lag.Infl)
+
+Graph.Data2 <- select(Reg.Data2,year,rate=stock.nom.rate) %>% mutate(type="Nom.Stock")
+Graph.Data2 <- select(Reg.Data2,year,rate=bond.nom.rate) %>% mutate(type="Nom.Bond") %>% bind_rows(Graph.Data2)
+Graph.Data2 <- select(Reg.Data2,year,rate=bond.exp.rate) %>% mutate(type="Exp.Bond") %>% bind_rows(Graph.Data2)
+Graph.Data2 <- select(Reg.Data2,year,rate=stock.exp.rate) %>% mutate(type="Exp.Stock") %>% bind_rows(Graph.Data2)
+Graph.Data2$type <- as.factor(Graph.Data2$type)
+
+Reg.Data.Dif2 <- Reg.Data2 %>% 
+  select(-lag.Infl,-lag.year) %>% 
+  mutate(bond.n.dif=bond.nom.rate-lag(bond.nom.rate),bond.e.dif=bond.exp.rate-lag(bond.exp.rate),
+         stock.n.dif=stock.nom.rate-lag(stock.nom.rate),stock.e.dif=stock.exp.rate-lag(stock.exp.rate)) %>% 
+  select(year,bond.n.dif,bond.e.dif,stock.n.dif,stock.e.dif) %>% slice(2:length(year))
+```
+
+```{r,echo=FALSE}
+filter(Graph.Data2,type!="Exp.Stock") %>% 
+  ggplot(aes(x=year,y=rate)) + geom_point(aes(col=type)) + geom_line(aes(col=type)) +
+  scale_color_manual(values=c("blue", "red", "limegreen"),name="",breaks=c("Nom.Bond","Exp.Bond","Nom.Stock"),
+                     labels=c("Nominal 3YR Rate","Exp. Real 3YR Rate","Nominal S&P 500 Yield")) +
+  xlab("Time") + ylab("Rate of Return (%)") + ggtitle("3YR US Treasury Bond vs S&P 500 Yields")
+
+filter(Graph.Data2,type!="Nom.Stock") %>% 
+  ggplot(aes(x=year,y=rate)) + geom_point(aes(col=type)) + geom_line(aes(col=type)) +
+  scale_color_manual(values=c("blue", "limegreen", "red"),name="",breaks=c("Nom.Bond","Exp.Bond","Exp.Stock"),
+                     labels=c("Nominal 3YR Rate","Exp. Real 3YR Rate","Exp. Real S&P 500 Yield")) +
+  xlab("Time") + ylab("Rate of Return (%)") + ggtitle("3YR US Treasury Bond vs S&P 500 Yields")
+```
