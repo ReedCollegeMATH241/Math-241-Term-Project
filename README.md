@@ -9,5 +9,5 @@ This is the GitHub repository for my Math 241 - Case Studies in Statistical Anal
 
 ## Comparing Stock Yields with Bond Rates
 
-![](README_images/comparison1.png)
-![](README_images/comparison2.png)
+![](README_images/Comparison1.png)
+![](README_images/Comparison2.png)
