@@ -268,4 +268,6 @@ Given the historical evidence for a rise in interest rates to result in the rise
 > http://seekingalpha.com/instablog/604052-element-alpha/65463-proof-that-the-modern-portfolio-theory-should-be-declared-dead (Average stock holding period)  
 > _The Intelligent Investor_ by Benjamin Graham (false belief that stocks are a good hedge for inflation)  
 > _Advanced Macroeconomics - 4th Edition_ by David Romer (modeling expected inflation)  
-> http://www.reuters.com/article/2015/05/06/us-usa-fed-yellen-idUSKBN0NR1JI20150506 (Janet Yellen on valuations)  
+> http://www.reuters.com/article/2015/05/06/us-usa-fed-yellen-idUSKBN0NR1JI20150506 (Janet Yellen on valuations) 
+
+test
