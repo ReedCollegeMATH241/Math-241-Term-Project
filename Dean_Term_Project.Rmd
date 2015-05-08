@@ -260,8 +260,6 @@ The B-G test rejects the null that there is no serial correlation in the error t
 
 Given the historical evidence for a rise in interest rates to result in the rise in yields for stocks, one would expect that this holds again if the Fed decides to raise the rock-bottom interest rates soon. Generally, since S&P 500 average earnings do not shift quickly, it is the average price of the S&P 500 that must fall to raise yields. Even Janet Yellen herself has commented recently that "equity market valuations are generally quite high". We may be in for some bear markets when the interest rate increases.
 
-test???
-
 > Sources:  
 > http://useconomy.about.com/od/glossary/g/Inverted_yield.htm (reasons for inverted yield curve)  
 > http://academic.reed.edu/economics/parker/312/tschapters/S13_Ch_1.pdf (Stationary vs. Non-Stationary time series)  
