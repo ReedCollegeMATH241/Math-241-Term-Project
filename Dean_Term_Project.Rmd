@@ -147,6 +147,8 @@ Graph.Data2 %>%
 
 It's difficult to tell whether the variables are stationary or not. A hypothesis test called the Augmented Dickey-Fuller test was created to test for stationarity. The null hypothesis is that the series is non-stationary. More details about the Augmented DF test can be found in sources.
 
+A more complete and interactive graph can be found [here](https://youngde.shinyapps.io/Bond_Stock_Shiny_App/).
+
 Expected Real S&P 500 Yield
 ```{r,echo=FALSE}
 adf.test(Reg.Data2$stock.exp.rate)
@@ -202,7 +204,7 @@ Given that we were unable to reject the null hypothesis that 3/4 of our variable
     + Loses one degree of freedom
 
 The specification of our model is $y_{t} = \beta_{1} + \beta_{2}x_{2t} + \beta_{3}x_{3t} + \epsilon_{t}$
-where y is stock yield difference, $x_{2}$ is expected real bond rate difference, and $x_{3}$ is nominal bond rate difference. Two regressions are run for both expected real and nominal stock yields as y.
+where y is stock yield difference, $x_{2}$ is expected real bond rate difference, and $x_{3}$ is nominal bond rate difference. Two regressions are run for both expected real and nominal stock yields as y. Note that only the three-year bond rates are used. Other bond types were not included to avoid multi-collinearity. Due to the spread basis of bond rates, it's likely that the different bond types are strongly correlated with each other so it would not be appropriate to include them all in the model.
 
 A summary of results, confidence intervals, and Breusch-Godfrey tests for serial correlation (auto correlation for time series) are presented below. 
 
